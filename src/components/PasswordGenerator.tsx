@@ -1,5 +1,7 @@
 import { useState } from "react";
-import usePasswordGenerator from "../hooks/usePasswordGenerator";
+import usePasswordGenerator, {
+	StrengthType,
+} from "../hooks/usePasswordGenerator";
 import "../styles/password.css";
 
 export interface CheckBox {
@@ -7,21 +9,32 @@ export interface CheckBox {
 	state: boolean;
 }
 
+const defaultCheckBoxData = [
+	{ title: "Include Uppercase Letters", state: false },
+	{ title: "Include Lowercase Letters", state: false },
+	{ title: "Include Numbers", state: false },
+	{ title: "Include Symbols", state: false },
+];
+
 const PasswordGenerator = () => {
 	const [passLength, setPassLength] = useState(4);
 	const [copy, setCopy] = useState(false);
-	const [checkboxData, setCheckboxData] = useState<CheckBox[]>([
-		{ title: "Include Uppercase Letters", state: false },
-		{ title: "Include Lowercase Letters", state: false },
-		{ title: "Include Numbers", state: false },
-		{ title: "Include Symbols", state: false },
-	]);
+	const [checkboxData, setCheckboxData] =
+		useState<CheckBox[]>(defaultCheckBoxData);
 
-	const { password, errorMessage, generatePassword } = usePasswordGenerator();
+	const { password, errorMessage, strength, generatePassword, resetPassword } =
+		usePasswordGenerator();
+
+	const resetToDefault = () => {
+		setCheckboxData(defaultCheckBoxData);
+		setCopy(false);
+		setPassLength(4);
+		navigator.clipboard.writeText("");
+		resetPassword();
+	};
 
 	const handleCheckBoxChange = (i: number) => {
 		const updatedState = [...checkboxData];
-		console.log(i, updatedState[i]);
 		updatedState[i].state = !updatedState[i].state;
 		setCheckboxData(updatedState);
 	};
@@ -76,12 +89,20 @@ const PasswordGenerator = () => {
 				{errorMessage && <div>{errorMessage}</div>}
 				<div className="strength">
 					<p>Strength</p>
-					<p className="left-value">Medium</p>
+					<p className="left-value">{strength}</p>
 				</div>
+				{password && strength === StrengthType.Weak && (
+					<p className="tip">
+						Tip: A good password usually has more than 8 characters with different character sets.
+					</p>
+				)}
 				<button
 					className="generate-button"
 					onClick={() => generatePassword(checkboxData, passLength)}>
 					GENERATE PASSWORD
+				</button>
+				<button className="reset-button" onClick={resetToDefault}>
+					Reset
 				</button>
 			</div>
 		</div>
